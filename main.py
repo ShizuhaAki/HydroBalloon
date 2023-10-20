@@ -4,6 +4,7 @@ import schedule
 import time
 import re
 import json
+from termcolor import colored
 import browser_cookie3 as cookielib
 from http.cookiejar import CookieJar
 
@@ -20,7 +21,10 @@ class Record:
         self.pid = problem.strip()
 
     def __str__(self):
-        return f"Problem: {self.pid}, User: {self.uid}"
+        if not self.uid in users:
+            return f"Problem: {self.pid}, User: {self.uid}, Location: NOT FOUND"
+        location = users[self.uid]
+        return colored(f"Problem: {self.pid}, User: {self.uid}. Location: {location}", color[self.pid])
 
 
 def init(domain: str, contest_id: str, base_url: str, interval: int):
@@ -68,9 +72,12 @@ def parse_record(base_url: str, record: str, cookie: CookieJar) -> Record:
     problem = body.find("a", href=re.compile("p/"))
     return Record(user=str(user.contents[0]), problem=str(problem.b.contents[0]))
 
-conf = json.load('config.json')
-domain = conf['domain']
-contest_id = conf['contest_id']
-base_url = conf['base_url']
-delay = conf['delay']
-init(domain, contest_id, base_url, delay)
+with open("config.json") as fp:
+    conf = json.load(fp)
+    domain = conf['domain']
+    contest_id = conf['contest_id']
+    base_url = conf['base_url']
+    delay = conf['delay']
+    users = conf['users']
+    color = conf['color']
+    init(domain, contest_id, base_url, delay)
